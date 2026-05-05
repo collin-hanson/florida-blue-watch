@@ -1,3 +1,29 @@
+# Florida Blue Watch
+
+**A real-time coastal ecosystem monitoring platform for 
+Florida's Reef Tract and associated seagrass systems.**
+
+Built by [Collin Hanson](https://github.com/collin-hanson) — 
+sustainability professional, LEED Green Associate, B.S. 
+Coastal Resilience, Coastal Carolina University.
+
+🌊 **Live site:** https://collin-hanson.github.io/florida-blue-watch
+
+This project grew out of undergraduate capstone research 
+exploring the economic interconnection between South 
+Florida's coral reefs and the local economy. It combines 
+sustainability domain expertise with live data integration, 
+interactive data visualization, and modern web development.
+
+**Key data highlights:**
+- $8.5B ecosystem asset value
+- $4.4B in annual reef-dependent sales
+- 70,400 jobs supported
+- $675M in annual flood protection
+- Live bleaching alerts from NOAA Coral Reef Watch
+
+---
+
 # Florida Blue Watch Dashboard
 
 A lightweight static dashboard for monitoring **Florida’s coastal ecosystem health** (coral reef + seagrass context), featuring:
