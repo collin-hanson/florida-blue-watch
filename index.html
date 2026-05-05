@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Florida Blue Watch — real-time coral reef monitoring and awareness for the Florida Reef Tract.">
+  <title>Florida Blue Watch | Florida Reef Tract Monitoring</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400;1,600&family=Source+Sans+3:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body class="site-body">
+  <a class="skip-link" href="#main-content">Skip to main content</a>
+
+  <header class="site-header" id="site-header">
+    <nav class="site-nav" aria-label="Primary">
+      <a class="site-logo" href="#overview" id="nav-logo">Florida <span class="site-logo__reef">Blue</span> Watch</a>
+      <button type="button" class="nav-menu-toggle" id="nav-menu-toggle" aria-expanded="false" aria-controls="nav-tablist" aria-label="Open dashboard menu">
+        <span class="nav-menu-toggle__icon" aria-hidden="true"></span>
+      </button>
+      <div class="nav-tabs" id="nav-tablist" role="tablist" aria-label="Dashboard sections">
+        <button type="button" class="nav-tab nav-tab--active" id="tab-overview" role="tab" aria-selected="true" aria-controls="overview" data-tab="overview">Overview</button>
+        <button type="button" class="nav-tab" id="tab-reef-health" role="tab" aria-selected="false" aria-controls="reef-health" data-tab="reef-health">Marine Health</button>
+        <button type="button" class="nav-tab" id="tab-economy" role="tab" aria-selected="false" aria-controls="economy" data-tab="economy">Economy</button>
+        <button type="button" class="nav-tab" id="tab-conservation" role="tab" aria-selected="false" aria-controls="conservation" data-tab="conservation">Conservation</button>
+      </div>
+      <span id="last-updated" aria-live="polite">Last updated: --</span>
+    </nav>
+  </header>
+
+  <main class="site-main" id="main-content">
+    <!-- Overview -->
+    <section class="tab-panel tab-panel--overview" id="overview" role="tabpanel" aria-labelledby="tab-overview" data-tab-panel="overview">
+      <div class="overview-three-col">
+        <div class="overview-side overview-side--left" aria-hidden="true"></div>
+        <div class="overview-center">
+          <div class="overview-hero-stack">
+            <div class="hero hero--overview" id="hero-overview">
+              <div class="hero__inner">
+                <h1 class="hero__title" id="hero-title">
+                  Florida <em class="hero__title-accent">Blue</em> Watch
+                </h1>
+                <p class="hero__intro">
+                  The Florida Reef Tract and its associated seagrass beds stretch over 350 miles from St. Lucie Inlet in Martin County south through the Florida Keys to the Dry Tortugas &mdash; forming the only barrier reef system in the continental United States. For thousands of years this coastal ecosystem has supported extraordinary marine biodiversity, protected Florida's shoreline from storms, and anchored one of the most productive coastal economies in the world. Today it faces an existential crisis &mdash; decades of warming oceans, ocean acidification, disease, and human impact have reduced live coral cover from a historical 25-40% to less than 2%, while seagrass beds face mounting pressure from heat, turbidity, and runoff. Florida Blue Watch tracks the health of this ecosystem in real time, drawing on live data from NOAA Coral Reef Watch, FDEP, and leading marine research institutions.
+                </p>
+              </div>
+            </div>
+          </div>
+          <div class="map-section map-section--overview-centered map-container" id="map-section">
+            <h2 class="visually-hidden">Florida Reef Tract map</h2>
+            <div class="map-wrap map-wrap--overview reef-map-container" id="map-wrap">
+              <img src="assets/reef-map.png" alt="Florida Reef Tract Map" id="reef-map-img">
+            </div>
+          </div>
+        </div>
+        <div class="overview-side overview-side--right" aria-hidden="true"></div>
+      </div>
+      <footer class="overview-credibility-strip footer-strip" aria-label="Data sources and attribution">
+        <ul class="overview-credibility-strip__sources">
+          <li>NOAA Coral Reef Watch</li>
+          <li>Florida DEP</li>
+          <li>Mote Marine Laboratory</li>
+          <li>Coral Restoration Foundation</li>
+          <li>FWC Unified Reef Map</li>
+        </ul>
+        <p class="overview-credibility-strip__attribution">Built by Collin Hanson &middot; Coastal Carolina University &middot; Data updated daily</p>
+      </footer>
+    </section>
+
+    <!-- Reef Health -->
+    <section class="tab-panel tab-panel--reef-health" id="reef-health" role="tabpanel" aria-labelledby="tab-reef-health" data-tab-panel="reef-health" hidden>
+      <div class="section-inner section-inner--reef-health">
+        <header class="section-header">
+          <h2 class="section-title" id="reef-health-heading">Marine Health Status</h2>
+          <p class="section-subtitle">Live indicators from NOAA Coral Reef Watch &amp; FDEP</p>
+        </header>
+
+        <div class="region-cards" id="region-cards">
+          <article class="region-card" id="region-card-keys" aria-labelledby="region-keys-title">
+            <h3 class="region-card__title" id="region-keys-title">Florida Keys</h3>
+            <p class="region-card__subtitle">Key Largo to the Dry Tortugas</p>
+            <ul class="metric-rows">
+              <li class="metric-row">
+                <span class="metric-row__label">Bleaching Alert Level</span>
+                <span class="metric-row__value-wrap">
+                  <span class="metric-row__value"><span class="metric-dot" id="fk-alert-dot"></span><span id="keys-bleaching">Loading...</span></span>
+                  <span class="metric-row__context">Updated daily from NOAA CRW</span>
+                </span>
+              </li>
+              <li class="metric-row">
+                <span class="metric-row__label">Sea Surface Temperature</span>
+                <span class="metric-row__value-wrap">
+                  <span class="metric-row__value"><span class="metric-dot" id="fk-sst-dot"></span><span id="keys-sst">Loading...</span></span>
+                  <span class="metric-row__context">Sea surface temperature at reef sites</span>
+                </span>
+              </li>
+              <li class="metric-row">
+                <span class="metric-row__label">Degree Heating Weeks</span>
+                <span class="metric-row__value-wrap">
+                  <span class="metric-row__value"><span class="metric-dot" id="fk-dhw-dot"></span><span id="keys-dhw">Loading...</span></span>
+                  <span class="metric-row__context">Accumulated heat stress over 12 weeks</span>
+                </span>
+              </li>
+              <li class="metric-row">
+                <span class="metric-row__label">Live Coral Cover</span>
+                <span class="metric-row__value-wrap">
+                  <span class="metric-row__value"><span class="metric-dot metric-dot--coral"></span><span id="keys-coral-cover">Loading...</span></span>
+                  <span class="metric-row__context">Down from 25-40% historically</span>
+                </span>
+              </li>
+              <li class="metric-row">
+                <span class="metric-row__label">Ocean pH</span>
+                <span class="metric-row__value-wrap">
+                  <span class="metric-row__value"><span class="metric-dot metric-dot--ph"></span><span id="keys-ph">Loading...</span></span>
+                  <span class="metric-row__context">Pre-industrial baseline was 8.18</span>
+                </span>
+              </li>
+            </ul>
+          </article>
+
+          <article class="region-card" id="region-card-sefl" aria-labelledby="region-sefl-title">
+            <h3 class="region-card__title" id="region-sefl-title">Southeast Florida</h3>
+            <p class="region-card__subtitle">Miami-Dade to St. Lucie Inlet</p>
+            <ul class="metric-rows">
+              <li class="metric-row">
+                <span class="metric-row__label">Bleaching Alert Level</span>
+                <span class="metric-row__value-wrap">
+                  <span class="metric-row__value"><span class="metric-dot" id="se-alert-dot"></span><span id="sefl-bleaching">Loading...</span></span>
+                  <span class="metric-row__context">Updated daily from NOAA CRW</span>
+                </span>
+              </li>
+              <li class="metric-row">
+                <span class="metric-row__label">Sea Surface Temperature</span>
+                <span class="metric-row__value-wrap">
+                  <span class="metric-row__value"><span class="metric-dot" id="se-sst-dot"></span><span id="sefl-sst">Loading...</span></span>
+                  <span class="metric-row__context">Sea surface temperature at reef sites</span>
+                </span>
+              </li>
+              <li class="metric-row">
+                <span class="metric-row__label">Degree Heating Weeks</span>
+                <span class="metric-row__value-wrap">
+                  <span class="metric-row__value"><span class="metric-dot" id="se-dhw-dot"></span><span id="sefl-dhw">Loading...</span></span>
+                  <span class="metric-row__context">Accumulated heat stress over 12 weeks</span>
+                </span>
+              </li>
+              <li class="metric-row">
+                <span class="metric-row__label">Live Coral Cover</span>
+                <span class="metric-row__value-wrap">
+                  <span class="metric-row__value"><span class="metric-dot metric-dot--coral"></span><span id="sefl-coral-cover">Loading...</span></span>
+                  <span class="metric-row__context">Down from 25-40% historically</span>
+                </span>
+              </li>
+              <li class="metric-row">
+                <span class="metric-row__label">Ocean pH</span>
+                <span class="metric-row__value-wrap">
+                  <span class="metric-row__value"><span class="metric-dot metric-dot--ph"></span><span id="sefl-ph">Loading...</span></span>
+                  <span class="metric-row__context">Pre-industrial baseline was 8.18</span>
+                </span>
+              </li>
+            </ul>
+          </article>
+
+          <article class="region-card" id="region-card-seagrass" aria-labelledby="region-seagrass-title">
+            <h3 class="region-card__title" id="region-seagrass-title">Seagrass Health</h3>
+            <p class="region-card__subtitle">Florida Bay &amp; Nearshore Waters</p>
+            <ul class="metric-rows">
+              <li class="metric-row">
+                <span class="metric-row__label">Florida Bay Coverage</span>
+                <span class="metric-row__value-wrap">
+                  <span class="metric-row__value"><span class="metric-dot metric-dot--red"></span>Severely reduced</span>
+                  <span class="metric-row__context">Major die-off events since 2015</span>
+                </span>
+              </li>
+              <li class="metric-row">
+                <span class="metric-row__label">Biscayne Bay</span>
+                <span class="metric-row__value-wrap">
+                  <span class="metric-row__value"><span class="metric-dot metric-dot--orange"></span>Moderately stressed</span>
+                  <span class="metric-row__context">Urban runoff and warming impacts</span>
+                </span>
+              </li>
+              <li class="metric-row">
+                <span class="metric-row__label">Keys Nearshore</span>
+                <span class="metric-row__value-wrap">
+                  <span class="metric-row__value"><span class="metric-dot metric-dot--yellow"></span>Variable — some recovery</span>
+                  <span class="metric-row__context">Patchy recovery at select sites</span>
+                </span>
+              </li>
+              <li class="metric-row">
+                <span class="metric-row__label">Primary Stressors</span>
+                <span class="metric-row__value-wrap">
+                  <span class="metric-row__value"><span class="metric-dot metric-dot--orange"></span>Heat, salinity, turbidity</span>
+                  <span class="metric-row__context">Compounded by reef degradation</span>
+                </span>
+              </li>
+              <li class="metric-row">
+                <span class="metric-row__label">Survey Frequency</span>
+                <span class="metric-row__value-wrap">
+                  <span class="metric-row__value"><span class="metric-dot metric-dot--teal"></span>Annual — FDEP &amp; SFWMD</span>
+                  <span class="metric-row__context">Last major survey: 2024</span>
+                </span>
+              </li>
+            </ul>
+            <p class="seagrass-card__foot">Annual survey data · FDEP, SFWMD &amp; FWC</p>
+          </article>
+        </div>
+
+        <section class="reef-charts" aria-label="Reef health charts">
+          <div class="reef-charts__row">
+            <article class="reef-chart-card reef-chart-card--top">
+              <div class="reef-chart-card__head">
+                <div>
+                  <h3 class="reef-chart-card__title">Sea Surface Temperature</h3>
+                  <p class="reef-chart-card__subtitle">Florida Keys — NOAA Coral Reef Watch</p>
+                </div>
+                <div class="chart-toggle-group" id="sst-toggle-group">
+                  <button type="button" class="chart-toggle-btn chart-toggle-btn--active" data-chart="sst" data-range="decades">Decades</button>
+                  <button type="button" class="chart-toggle-btn" data-chart="sst" data-range="years">Years</button>
+                  <button type="button" class="chart-toggle-btn" data-chart="sst" data-range="months">Months</button>
+                </div>
+              </div>
+              <div class="reef-chart-canvas reef-chart-canvas--top">
+                <canvas id="sst-chart"></canvas>
+              </div>
+            </article>
+            <article class="reef-chart-card reef-chart-card--top">
+              <div class="reef-chart-card__head">
+                <div>
+                  <h3 class="reef-chart-card__title">Bleaching Season Severity</h3>
+                  <p class="reef-chart-card__subtitle">Florida Keys — Degree Heating Weeks</p>
+                </div>
+                <div class="chart-toggle-group" id="bleaching-toggle-group">
+                  <button type="button" class="chart-toggle-btn chart-toggle-btn--active" data-chart="bleaching" data-range="years">Years</button>
+                  <button type="button" class="chart-toggle-btn" data-chart="bleaching" data-range="months">Months</button>
+                </div>
+              </div>
+              <div class="reef-chart-canvas reef-chart-canvas--top">
+                <canvas id="bleaching-chart"></canvas>
+              </div>
+            </article>
+          </div>
+          <article class="reef-chart-card reef-chart-card--bottom">
+            <div class="reef-chart-card__head">
+              <div>
+                <h3 class="reef-chart-card__title">Live Coral Cover Decline — Florida Keys</h3>
+                <p class="reef-chart-card__subtitle">Source: CREMP / NOAA monitoring data</p>
+              </div>
+            </div>
+            <div class="reef-chart-canvas reef-chart-canvas--bottom">
+              <canvas id="coral-cover-chart"></canvas>
+            </div>
+          </article>
+        </section>
+      </div>
+    </section>
+
+    <!-- Economy -->
+    <section class="tab-panel tab-panel--economy" id="economy" role="tabpanel" aria-labelledby="tab-economy" data-tab-panel="economy" hidden>
+      <div class="section-inner section-inner--economy">
+        <header class="section-header section-header--economy">
+          <h2 class="section-title" id="economy-heading">Economic Value of Florida's Coastal Ecosystem</h2>
+          <p class="section-subtitle">Why protecting the reef is an economic imperative</p>
+        </header>
+
+        <div class="economy-stat-grid" role="list">
+          <article class="economy-stat-card" role="listitem">
+            <p class="economy-stat-card__value">$8.5B</p>
+            <h3 class="economy-stat-card__label">Ecosystem Asset Value</h3>
+            <p class="economy-stat-card__desc">Total estimated value of reef-dependent goods and services</p>
+            <p class="economy-stat-card__source">Source: NOAA</p>
+          </article>
+          <article class="economy-stat-card" role="listitem">
+            <p class="economy-stat-card__value">$4.4B</p>
+            <h3 class="economy-stat-card__label">Annual Local Sales</h3>
+            <p class="economy-stat-card__desc">Revenue from reef-dependent tourism, diving, fishing, and marine industries</p>
+            <p class="economy-stat-card__source">Source: NOAA</p>
+          </article>
+          <article class="economy-stat-card" role="listitem">
+            <p class="economy-stat-card__value">70,400</p>
+            <h3 class="economy-stat-card__label">Jobs Supported</h3>
+            <p class="economy-stat-card__desc">Full and part-time positions across hospitality, diving, and coastal services</p>
+            <p class="economy-stat-card__source">Source: NOAA</p>
+          </article>
+          <article class="economy-stat-card" role="listitem">
+            <p class="economy-stat-card__value">$675M</p>
+            <h3 class="economy-stat-card__label">Annual Flood Protection</h3>
+            <p class="economy-stat-card__desc">Property and economic activity protected by reef wave-energy absorption annually</p>
+            <p class="economy-stat-card__source">Source: NOAA</p>
+          </article>
+        </div>
+
+        <div class="economy-two-col">
+          <article class="region-card economy-detail-card">
+            <h3 class="economy-detail-card__title">Coastal Property Value Impact</h3>
+            <p class="economy-detail-card__lede">Healthy reefs buffer waves, support clear water, and underpin premium coastal real estate. Degradation raises exposure to flooding and erodes the value proposition that drives waterfront markets.</p>
+            <ul class="economy-metric-list">
+              <li class="economy-metric-row">
+                <span class="economy-metric-row__label">Waterfront premium</span>
+                <span class="economy-metric-row__value"><span class="metric-dot economy-dot--green"></span>20–30% above inland properties</span>
+              </li>
+              <li class="economy-metric-row">
+                <span class="economy-metric-row__label">Water quality correlation</span>
+                <span class="economy-metric-row__value"><span class="metric-dot economy-dot--teal"></span>Direct link to reef health</span>
+              </li>
+              <li class="economy-metric-row">
+                <span class="economy-metric-row__label">1m reef height loss impact</span>
+                <span class="economy-metric-row__value"><span class="metric-dot economy-dot--red"></span>$2.9B in property at risk</span>
+              </li>
+              <li class="economy-metric-row">
+                <span class="economy-metric-row__label">Flood plain expansion</span>
+                <span class="economy-metric-row__value"><span class="metric-dot economy-dot--red"></span>20km² added, 24,000 more at risk</span>
+              </li>
+            </ul>
+            <p class="economy-source-note">Source: Storlazzi et al. USGS 2019; Bin et al. 2017</p>
+          </article>
+
+          <article class="region-card economy-detail-card">
+            <h3 class="economy-detail-card__title">Reef-Seagrass Carbon Ecosystem</h3>
+            <p class="economy-detail-card__lede">Coral reefs and seagrass beds function as a linked carbon system. While coral reefs themselves are net carbon sources, healthy reefs protect adjacent seagrass beds — among the most efficient marine carbon sinks on Earth — by reducing wave energy and enabling sediment accumulation.</p>
+            <ul class="economy-metric-list">
+              <li class="economy-metric-row">
+                <span class="economy-metric-row__label">Florida seagrass extent</span>
+                <span class="economy-metric-row__value"><span class="metric-dot economy-dot--green"></span>~6,500 km²</span>
+              </li>
+              <li class="economy-metric-row">
+                <span class="economy-metric-row__label">Carbon burial rate</span>
+                <span class="economy-metric-row__value"><span class="metric-dot economy-dot--green"></span>83g C/m²/year</span>
+              </li>
+              <li class="economy-metric-row">
+                <span class="economy-metric-row__label">Carbon stored per hectare</span>
+                <span class="economy-metric-row__value"><span class="metric-dot economy-dot--green"></span>100–300 tons</span>
+              </li>
+              <li class="economy-metric-row">
+                <span class="economy-metric-row__label">Reef's role</span>
+                <span class="economy-metric-row__value"><span class="metric-dot economy-dot--teal"></span>Wave protection enables seagrass survival</span>
+              </li>
+              <li class="economy-metric-row">
+                <span class="economy-metric-row__label">Nature-based credit price</span>
+                <span class="economy-metric-row__value"><span class="metric-dot economy-dot--yellow"></span>~$15/tCO₂e (VCM 2026)</span>
+              </li>
+            </ul>
+            <p class="economy-detail-card__note">
+              <em>Coral reefs are net carbon sources due to calcification. Their conservation value for carbon lies in protecting adjacent seagrass carbon sinks.</em>
+            </p>
+            <p class="economy-source-note">Sources: OMICS Online; Frontiers in Marine Science 2020; Springer 2019</p>
+          </article>
+        </div>
+
+        <section class="economy-chart-block" aria-labelledby="economy-chart-heading">
+          <div class="reef-chart-card economy-chart-card">
+            <div class="reef-chart-card__head economy-chart-card__head--solo">
+              <div>
+                <h3 class="reef-chart-card__title" id="economy-chart-heading">Current Economic Value Dependent on Florida's Reef</h3>
+                <p class="reef-chart-card__subtitle">Annual value at risk if the reef system continues to decline · Sources: NOAA, USGS Storlazzi et al. 2019</p>
+              </div>
+            </div>
+            <div class="reef-chart-canvas economy-chart-canvas">
+              <canvas id="economy-risk-chart" aria-label="Bar chart of economic value at risk by category"></canvas>
+            </div>
+            <div class="economy-chart-notes">
+              <p class="economy-chart-footnote">Values in millions USD. Employment Income represents ~$2B in local income supported by 70,400 reef-dependent jobs. Sources: NOAA, USGS, Storlazzi et al. 2019</p>
+              <p class="economy-chart-verified">Data last verified: May 2026</p>
+            </div>
+          </div>
+        </section>
+      </div>
+    </section>
+
+    <!-- Conservation -->
+    <section class="tab-panel tab-panel--conservation" id="conservation" role="tabpanel" aria-labelledby="tab-conservation" data-tab-panel="conservation" hidden>
+      <div class="section-inner section-inner--conservation">
+        <header class="section-header">
+          <h2 class="section-title" id="conservation-heading">Conservation News</h2>
+          <p class="section-subtitle">Latest from NOAA and reef conservation partners</p>
+        </header>
+
+        <div class="news-controls" id="news-controls">
+          <label class="visually-hidden" for="news-search">Search news</label>
+          <input type="search" class="news-search" id="news-search" name="news-search" placeholder="Search headlines and sources…" autocomplete="off">
+          <div class="news-filters" role="group" aria-label="Filter news">
+            <button type="button" class="news-filter-btn news-filter-btn--active" id="news-filter-all" data-news-filter="all">All</button>
+            <button type="button" class="news-filter-btn" id="news-filter-noaa" data-news-filter="noaa">NOAA</button>
+            <button type="button" class="news-filter-btn" id="news-filter-restoration" data-news-filter="restoration">Restoration</button>
+          </div>
+        </div>
+
+        <div class="news-feed-wrap">
+          <p class="news-loading" id="news-loading" aria-live="polite">Loading news…</p>
+          <div class="news-feed" id="news-feed" aria-busy="true" aria-label="Conservation news articles"></div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script src="js/claude.js"></script>
+  <script type="module" src="js/app.js"></script>
+</body>
+</html>
