@@ -386,7 +386,33 @@ body.site-body {
   }
 }
 
-/* Tablet (481px–767px): single column, fixed map height */
+/*
+ * Narrow viewports: the overview grid used 1fr + height:100% on the center column,
+ * which capped the column to the flex area and let long hero copy overflow onto the
+ * credibility footer. Size rows to content instead; hide the map on small screens.
+ */
+@media (max-width: 767px) {
+  .overview-three-col {
+    grid-template-rows: auto;
+    flex: 0 0 auto;
+    min-height: auto;
+  }
+
+  .overview-center {
+    height: auto;
+  }
+
+  .tab-panel--overview .map-section.map-section--overview-centered {
+    display: none;
+  }
+
+  .overview-credibility-strip {
+    position: relative;
+    z-index: 5;
+  }
+}
+
+/* Tablet (481px–767px): single column */
 @media (max-width: 767px) and (min-width: 481px) {
   .overview-three-col {
     grid-template-columns: 1fr;
@@ -404,21 +430,6 @@ body.site-body {
   .hero--overview .hero__title {
     font-size: 48px;
     line-height: 1.08;
-  }
-
-  .tab-panel--overview .map-section.map-section--overview-centered {
-    flex: 0 0 auto;
-  }
-
-  .tab-panel--overview .map-section--overview-centered .map-wrap--overview {
-    flex: 0 0 auto;
-    min-height: 0;
-  }
-
-  .tab-panel--overview #reef-map-img {
-    max-height: 400px;
-    width: auto;
-    object-fit: contain;
   }
 }
 
@@ -492,19 +503,6 @@ body.site-body {
 
   .hero--overview .hero__intro {
     font-size: 14px;
-  }
-
-  .tab-panel--overview .map-section.map-section--overview-centered {
-    flex: 0 0 auto;
-    margin-left: -16px;
-    margin-right: -16px;
-    width: calc(100% + 32px);
-  }
-
-  .tab-panel--overview #reef-map-img {
-    max-height: 300px;
-    width: auto;
-    object-fit: contain;
   }
 
   .overview-credibility-strip {
