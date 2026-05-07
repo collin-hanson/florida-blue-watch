@@ -1,27 +1,19 @@
-import { fetchReefData, initReefData } from "./api.js";
+import { fetchFloridaKeysSstObservationsLast12, fetchReefData, initReefData } from "./api.js";
 
 const TAB_IDS = ["overview", "reef-health", "economy", "conservation"];
 const ALL_FILTER = "all";
 const NOAA_FILTER = "noaa";
 const RESTORATION_FILTER = "restoration";
 
-const NEWS_ITEMS = [
-  {
-    source: "NOAA Fisheries",
-    date: "Apr 2026",
-    tag: "Restoration",
-    title: "Next-Generation Coral Restoration Expands Across Florida Keys",
-    desc: "NOAA and partners deploy heat-resilient coral genotypes at Mission: Iconic Reefs sites following post-2023 mortality assessment.",
-    url: "https://fisheries.noaa.gov",
-  },
-  {
-    source: "Florida Aquarium",
-    date: "Jan 2026",
-    tag: "Restoration",
-    title: "9,000 Lab-Grown Coral Juveniles Transferred to Reef Partners",
-    desc: "Largest single statewide deployment of land-grown juvenile corals transferred to Reef Renewal USA and The Reef Institute.",
-    url: "https://flaquarium.org",
-  },
+const RESTORATION_KEYWORD_RE = /restoration|restore|reef renewal|iconic reefs|nursery|outplant/i;
+
+/** Fetched in-browser via CORS proxy + XML parse (avoids rss2json 422 / API limits). */
+const NEWS_RSS_URLS = [
+  "https://www.fisheries.noaa.gov/rss/all-topics.rss",
+  "https://www.coralrestoration.org/feed/",
+];
+
+const NEWS_FALLBACK = [
   {
     source: "NOAA Coral Reef Watch",
     date: "Dec 2025",
@@ -31,44 +23,20 @@ const NEWS_ITEMS = [
     url: "https://coralreefwatch.noaa.gov",
   },
   {
-    source: "Mote Marine Laboratory",
-    date: "Dec 2025",
-    tag: "Science",
-    title: "BleachWatch 2025 Annual Report Released",
-    desc: "Citizen science monitoring documents moderate bleaching in Keys and paling in Miami area during the 2025 bleaching season.",
-    url: "https://mote.org",
+    source: "Coral Restoration Foundation",
+    date: "Jan 2026",
+    tag: "Restoration",
+    title: "Reef Restoration and Nursery Updates",
+    desc: "Partners continue outplanting resilient corals across Florida Keys restoration sites with expanded monitoring.",
+    url: "https://www.coralrestoration.org",
   },
   {
-    source: "Florida Governor's Office",
-    date: "Dec 2025",
-    tag: "Funding",
-    title: "$9.5M Awarded for 11 Florida Coral Restoration Projects",
-    desc: "FCR3 Initiative funding awarded for coral restoration projects statewide alongside $20M for Biscayne Bay water quality improvements.",
-    url: "https://flgov.com",
-  },
-  {
-    source: "Science Journal",
-    date: "Oct 2025",
-    tag: "Research",
-    title: "Caribbean Acropora Corals Declared Functionally Extinct on Florida Reef",
-    desc: "Landmark study documents 97.8-100% mortality of staghorn and elkhorn corals across Florida Keys following the 2023 marine heatwave.",
-    url: "https://coralreef.noaa.gov",
-  },
-  {
-    source: "NOAA AOML",
-    date: "2024",
-    tag: "Research",
-    title: "70% of Florida Coral Reefs Now in Net Erosion State",
-    desc: "NCRMP survey data across 723 sites shows majority of Florida Reef Tract losing structural complexity faster than it can rebuild.",
-    url: "https://aoml.noaa.gov",
-  },
-  {
-    source: "WUSF Public Media",
-    date: "Mar 2026",
-    tag: "Policy",
-    title: "Florida Reef Restoration Funding Gap Emerges for 2026",
-    desc: "FCR3 Phase 2 funding reportedly omitted from Florida's proposed 2026 legislative budget, raising concerns about restoration commitments.",
-    url: "https://wusf.org",
+    source: "NOAA Fisheries",
+    date: "Apr 2026",
+    tag: "Restoration",
+    title: "Next-Generation Coral Restoration Expands Across Florida Keys",
+    desc: "NOAA and partners deploy heat-resilient coral genotypes at Mission: Iconic Reefs sites following post-2023 mortality assessment.",
+    url: "https://www.fisheries.noaa.gov",
   },
 ];
 
@@ -82,6 +50,8 @@ let reefCharts = {
   coralCover: null,
 };
 let economyChartInitialized = false;
+let sstMonthsLiveCache = null;
+let cachedFloridaKeysDhw = null;
 
 const SST_DATASETS = {
   decades: {
@@ -200,12 +170,47 @@ function setActiveChartToggle(chartName, activeRange) {
   });
 }
 
-function updateSstChart(range) {
+function applyLiveDhwToBleachingYearsChart(floridaKeysDhw) {
+  if (!reefCharts.bleaching) return;
+  const labels = reefCharts.bleaching.data.labels;
+  const idx = labels.indexOf("2025");
+  if (idx === -1) return;
+
+  const ds = reefCharts.bleaching.data.datasets[0];
+  const next = [...ds.data];
+  if (floridaKeysDhw == null || !Number.isFinite(floridaKeysDhw)) {
+    next[idx] = BLEACHING_DATASETS.years.data[idx];
+  } else {
+    next[idx] = floridaKeysDhw === 0 ? 0.1 : floridaKeysDhw;
+  }
+  ds.data = next;
+  ds.backgroundColor = next.map(getBleachingBarColor);
+  reefCharts.bleaching.update();
+}
+
+async function updateSstChart(range) {
   if (!reefCharts.sst) return;
-  const dataset = SST_DATASETS[range];
-  if (!dataset) return;
-  reefCharts.sst.data.labels = dataset.labels;
-  reefCharts.sst.data.datasets[0].data = dataset.data;
+
+  if (range === "months") {
+    try {
+      if (!sstMonthsLiveCache) {
+        sstMonthsLiveCache = await fetchFloridaKeysSstObservationsLast12();
+      }
+      reefCharts.sst.data.labels = sstMonthsLiveCache.labels;
+      reefCharts.sst.data.datasets[0].data = sstMonthsLiveCache.data;
+    } catch (err) {
+      console.error("SST months live data failed, using fallback:", err);
+      const fallback = SST_DATASETS.months;
+      reefCharts.sst.data.labels = fallback.labels;
+      reefCharts.sst.data.datasets[0].data = fallback.data;
+    }
+  } else {
+    const dataset = SST_DATASETS[range];
+    if (!dataset) return;
+    reefCharts.sst.data.labels = dataset.labels;
+    reefCharts.sst.data.datasets[0].data = dataset.data;
+  }
+
   reefCharts.sst.update();
   setActiveChartToggle("sst", range);
 }
@@ -215,16 +220,21 @@ function updateBleachingChart(range) {
   const dataset = BLEACHING_DATASETS[range];
   if (!dataset) return;
   reefCharts.bleaching.data.labels = dataset.labels;
-  reefCharts.bleaching.data.datasets[0].data = dataset.data;
+  reefCharts.bleaching.data.datasets[0].data = [...dataset.data];
   reefCharts.bleaching.data.datasets[0].backgroundColor = dataset.data.map(getBleachingBarColor);
   reefCharts.bleaching.update();
   setActiveChartToggle("bleaching", range);
+  if (range === "years") {
+    applyLiveDhwToBleachingYearsChart(cachedFloridaKeysDhw);
+  }
 }
 
 function initChartToggles() {
   const sstButtons = document.querySelectorAll('.chart-toggle-btn[data-chart="sst"]');
   sstButtons.forEach((button) => {
-    button.addEventListener("click", () => updateSstChart(button.dataset.range));
+    button.addEventListener("click", () => {
+      void updateSstChart(button.dataset.range);
+    });
   });
 
   const bleachingButtons = document.querySelectorAll('.chart-toggle-btn[data-chart="bleaching"]');
@@ -442,16 +452,17 @@ function showPanel(panel, shouldShow) {
 async function onTabActivated(tabName) {
   if (tabName === "reef-health") {
     initReefCharts();
+    let result;
     if (!reefDataInitialized) {
       reefDataInitialized = true;
-      await initReefData();
+      result = await initReefData();
     } else {
-      await fetchReefData();
+      result = await fetchReefData();
     }
+    cachedFloridaKeysDhw = result?.floridaKeysDhw ?? null;
+    applyLiveDhwToBleachingYearsChart(cachedFloridaKeysDhw);
   } else if (tabName === "economy") {
     initEconomyChart();
-  } else if (tabName === "conservation") {
-    initNewsFeed();
   }
 }
 
@@ -474,6 +485,144 @@ async function activateTab(tabButton) {
   await onTabActivated(tabName);
 }
 
+function stripHtml(html) {
+  if (!html) return "";
+  const d = document.createElement("div");
+  d.innerHTML = html;
+  return (d.textContent || d.innerText || "").replace(/\s+/g, " ").trim();
+}
+
+function truncateText(str, maxLen) {
+  const t = (str || "").trim();
+  if (t.length <= maxLen) return t;
+  return `${t.slice(0, maxLen).trim()}…`;
+}
+
+function formatRssPubDate(pubDate) {
+  if (!pubDate) return "—";
+  const d = new Date(pubDate);
+  if (Number.isNaN(d.getTime())) return "—";
+  return d.toLocaleDateString("en-US", { month: "short", year: "numeric" });
+}
+
+function inferNewsTag(title, description, sourceName) {
+  const blob = `${title} ${description} ${sourceName}`.toLowerCase();
+  if (RESTORATION_KEYWORD_RE.test(blob)) return "restoration";
+  return "news";
+}
+
+function safeArticleUrl(href) {
+  try {
+    const u = new URL(href, "https://example.invalid");
+    if (u.protocol === "http:" || u.protocol === "https:") return u.href;
+  } catch {
+    /* ignore */
+  }
+  return "#";
+}
+
+function normalizeRssItem(item, feedTitle) {
+  const rawTitle = stripHtml(item.title || "");
+  const rawDescFull = stripHtml(item.description || item.content || "");
+  const source = stripHtml(feedTitle || "News");
+  const title = rawTitle || "Untitled";
+  const desc = truncateText(rawDescFull, 150);
+  const url = item.link || "";
+  const date = formatRssPubDate(item.pubDate);
+  const tag = inferNewsTag(title, rawDescFull, source);
+  return { source, date, title, desc, url, tag };
+}
+
+const ALLORIGINS_RAW = "https://api.allorigins.win/raw?url=";
+
+async function fetchRssXmlText(rssUrl) {
+  const res = await fetch(`${ALLORIGINS_RAW}${encodeURIComponent(rssUrl)}`);
+  if (!res.ok) throw new Error(`RSS proxy HTTP ${res.status}`);
+  return res.text();
+}
+
+function rssItemLinkFromElement(itemEl) {
+  const link = itemEl.querySelector(":scope > link");
+  if (!link) return "";
+  const href = link.getAttribute("href");
+  if (href) return href.trim();
+  return (link.textContent || "").trim();
+}
+
+function rssItemDescriptionFromElement(itemEl) {
+  const desc = itemEl.querySelector(":scope > description");
+  if (desc?.textContent) return desc.textContent;
+  for (const child of itemEl.children) {
+    const name = child.tagName.toLowerCase();
+    if (name === "content:encoded" || name.endsWith(":encoded")) {
+      return child.textContent || "";
+    }
+  }
+  return "";
+}
+
+function parseRss2Feed(doc) {
+  const channel = doc.querySelector("channel");
+  if (!channel) return null;
+  const feedTitle = channel.querySelector(":scope > title")?.textContent?.trim() || "News";
+  const items = [...channel.querySelectorAll(":scope > item")].map((itemEl) => ({
+    title: itemEl.querySelector(":scope > title")?.textContent?.trim() || "",
+    link: rssItemLinkFromElement(itemEl),
+    pubDate: itemEl.querySelector(":scope > pubDate")?.textContent?.trim() || "",
+    description: rssItemDescriptionFromElement(itemEl),
+    content: "",
+  }));
+  return { feedTitle, items };
+}
+
+function parseAtomFeed(doc) {
+  const feed = doc.querySelector("feed");
+  if (!feed) return null;
+  const feedTitle = feed.querySelector(":scope > title")?.textContent?.trim() || "News";
+  const items = [...feed.querySelectorAll(":scope > entry")].map((entry) => {
+    const linkEl =
+      entry.querySelector(':scope > link[rel="alternate"]') || entry.querySelector(":scope > link");
+    const href = linkEl?.getAttribute("href")?.trim() || "";
+    const title = entry.querySelector(":scope > title")?.textContent?.trim() || "";
+    const pubDate =
+      entry.querySelector(":scope > published")?.textContent?.trim() ||
+      entry.querySelector(":scope > updated")?.textContent?.trim() ||
+      "";
+    const description =
+      entry.querySelector(":scope > summary")?.textContent?.trim() ||
+      entry.querySelector(":scope > content")?.textContent?.trim() ||
+      "";
+    return { title, link: href, pubDate, description, content: "" };
+  });
+  return { feedTitle, items };
+}
+
+async function fetchArticlesFromRssUrl(rssUrl, maxItems) {
+  const xml = await fetchRssXmlText(rssUrl);
+  const doc = new DOMParser().parseFromString(xml, "text/xml");
+  if (doc.querySelector("parsererror")) {
+    throw new Error("Invalid RSS/XML");
+  }
+  const parsed = parseRss2Feed(doc) || parseAtomFeed(doc);
+  if (!parsed?.items?.length) throw new Error("No items in feed");
+  return parsed.items
+    .slice(0, maxItems)
+    .map((row) => normalizeRssItem(row, parsed.feedTitle));
+}
+
+async function fetchNewsFromRss() {
+  const maxPerFeed = 4;
+  const batches = await Promise.all(
+    NEWS_RSS_URLS.map((url) =>
+      fetchArticlesFromRssUrl(url, maxPerFeed).catch((err) => {
+        console.warn("RSS feed failed:", url, err);
+        return [];
+      })
+    )
+  );
+  return batches.flat();
+}
+
 function createNewsCard(newsItem) {
   const card = document.createElement("article");
   card.className = "news-card";
@@ -482,29 +631,49 @@ function createNewsCard(newsItem) {
   card.dataset.title = newsItem.title;
   card.dataset.desc = newsItem.desc;
 
-  card.innerHTML = `
-    <div class="news-card__meta">
-      <span class="news-card__source">${newsItem.source}</span>
-      <span class="news-card__date">${newsItem.date}</span>
-      <span class="news-card__tag">${newsItem.tag}</span>
-    </div>
-    <h3 class="news-card__title">${newsItem.title}</h3>
-    <p class="news-card__desc">${newsItem.desc}</p>
-    <a class="news-card__link" href="${newsItem.url}" target="_blank" rel="noopener noreferrer">Read more →</a>
-  `;
+  const meta = document.createElement("div");
+  meta.className = "news-card__meta";
 
+  const sourceEl = document.createElement("span");
+  sourceEl.className = "news-card__source";
+  sourceEl.textContent = newsItem.source;
+
+  const dateEl = document.createElement("span");
+  dateEl.className = "news-card__date";
+  dateEl.textContent = newsItem.date;
+
+  meta.append(sourceEl, dateEl);
+
+  const titleEl = document.createElement("h3");
+  titleEl.className = "news-card__title";
+  titleEl.textContent = newsItem.title;
+
+  const descEl = document.createElement("p");
+  descEl.className = "news-card__desc";
+  descEl.textContent = newsItem.desc;
+
+  const link = document.createElement("a");
+  link.className = "news-card__link";
+  link.href = safeArticleUrl(newsItem.url);
+  link.target = "_blank";
+  link.rel = "noopener noreferrer";
+  link.textContent = "Read more →";
+
+  card.append(meta, titleEl, descEl, link);
   return card;
 }
 
 function cardMatchesFilter(card, filterValue) {
   const source = (card.dataset.source || "").toLowerCase();
   const tag = (card.dataset.tag || "").toLowerCase();
+  const title = (card.dataset.title || "").toLowerCase();
+  const desc = (card.dataset.desc || "").toLowerCase();
 
   if (filterValue === NOAA_FILTER) {
     return source.includes("noaa");
   }
   if (filterValue === RESTORATION_FILTER) {
-    return tag === "restoration";
+    return tag === "restoration" || RESTORATION_KEYWORD_RE.test(`${title} ${desc}`);
   }
   return true;
 }
@@ -586,13 +755,28 @@ function initNewsFilterButtons() {
   }
 }
 
-export function initNewsFeed() {
+export async function initNewsFeed() {
   const newsFeed = getById("news-feed");
   const loading = getById("news-loading");
   if (!newsFeed) return;
 
   newsFeed.innerHTML = "";
-  NEWS_ITEMS.forEach((item) => {
+  if (loading) {
+    loading.style.display = "block";
+    loading.textContent = "Loading news…";
+  }
+  newsFeed.setAttribute("aria-busy", "true");
+
+  let list;
+  try {
+    const articles = await fetchNewsFromRss();
+    list = articles.length > 0 ? articles : NEWS_FALLBACK;
+  } catch (err) {
+    console.error("News RSS fetch failed:", err);
+    list = NEWS_FALLBACK;
+  }
+
+  list.forEach((item) => {
     newsFeed.appendChild(createNewsCard(item));
   });
   newsFeed.setAttribute("aria-busy", "false");
@@ -630,7 +814,7 @@ function initTabs() {
 function initApp() {
   initNewsSearch();
   initNewsFilterButtons();
-  initNewsFeed();
+  void initNewsFeed();
   initTabs();
   initNavMenu();
 }

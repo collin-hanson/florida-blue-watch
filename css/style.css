@@ -233,8 +233,9 @@ body.site-body {
   position: relative;
   display: flex;
   flex-direction: column;
-  flex: 1 1 0;
-  min-height: 0;
+  /* Never shrink shorter than hero + map + grid (min-height:0 caused overflow overlap with footer) */
+  flex: 1 0 auto;
+  min-height: min-content;
   align-self: stretch;
   width: 100%;
   padding: 0;
@@ -254,12 +255,14 @@ body.site-body {
 }
 
 #overview {
-  flex: 1;
+  flex: 1 0 auto;
   display: flex;
   flex-direction: column;
   min-height: calc(100vh - 65px);
   padding-bottom: 0;
   margin-bottom: 0;
+  overflow-x: clip;
+  overflow-y: visible;
 }
 
 .map-container {
@@ -268,7 +271,7 @@ body.site-body {
 }
 
 .reef-map-container {
-  flex: 1;
+  flex: 0 0 auto;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -276,32 +279,35 @@ body.site-body {
 }
 
 #reef-map-img {
-  width: 680px;
-  max-width: 100%;
+  width: 100%;
+  max-width: min(880px, 100%);
   height: auto;
-  max-height: 100%;
   display: block;
   margin: 0 auto;
   border-radius: 8px;
   border: 1px solid rgba(41,212,197,0.3);
   box-shadow: 0 0 24px rgba(41,212,197,0.15);
+  object-fit: contain;
+  object-position: center;
 }
 
 .tab-panel--overview #reef-map-img {
-  flex: 0 1 auto;
-  min-height: 0;
+  flex: none;
+  max-height: none;
 }
 .overview-three-col {
-  flex: 1 1 auto;
-  min-height: 0;
+  /* Content-sized: never flex-shrink below hero+map (prevents footer drawing over map) */
+  flex: 0 0 auto;
+  min-height: min-content;
   display: grid;
   grid-template-columns: calc(25% - 5px) calc(50% + 10px) calc(25% - 5px);
-  grid-template-rows: 1fr;
+  grid-template-rows: auto;
   width: 100%;
   margin: 0;
   margin-bottom: 0;
-  padding: 0;
+  padding: 0 0 1.25rem;
   align-items: stretch;
+  align-content: start;
 }
 
 .overview-side {
@@ -368,12 +374,11 @@ body.site-body {
 
 .overview-center {
   min-width: 0;
-  min-height: 0;
-  height: 100%;
-  margin-bottom: 0;
-  padding-bottom: 0;
   display: flex;
   flex-direction: column;
+  justify-content: flex-start;
+  margin-bottom: 0;
+  padding-bottom: 0;
   background:
     radial-gradient(ellipse 90% 70% at 50% 0%, rgba(62, 207, 255, 0.1), transparent 50%),
     linear-gradient(180deg, #0d1f38 0%, var(--color-bg) 85%);
@@ -387,9 +392,8 @@ body.site-body {
 }
 
 /*
- * Narrow viewports: the overview grid used 1fr + height:100% on the center column,
- * which capped the column to the flex area and let long hero copy overflow onto the
- * credibility footer. Size rows to content instead; hide the map on small screens.
+ * Narrow viewports: size the overview grid to content so hero copy cannot overflow
+ * onto the credibility footer; map stays visible and scales with width.
  */
 @media (max-width: 767px) {
   .overview-three-col {
@@ -403,7 +407,15 @@ body.site-body {
   }
 
   .tab-panel--overview .map-section.map-section--overview-centered {
-    display: none;
+    flex: 0 0 auto;
+    padding-left: 0;
+    padding-right: 0;
+  }
+
+  .tab-panel--overview .map-section--overview-centered .map-wrap--overview {
+    padding-left: 12px;
+    padding-right: 12px;
+    box-sizing: border-box;
   }
 
   .overview-credibility-strip {
@@ -588,7 +600,7 @@ body.site-body {
 .hero--overview .hero__title {
   margin: 0 auto 20px;
   max-width: 680px;
-  font-size: 58px;
+  font-size: clamp(2rem, 5vw, 3.625rem);
   line-height: 1.06;
   text-align: center;
 }
@@ -622,7 +634,7 @@ body.site-body {
 }
 
 .hero--overview .hero__intro {
-  font-size: 16px;
+  font-size: clamp(0.875rem, 0.85rem + 0.35vw, 1rem);
   line-height: 1.85;
   max-width: 680px;
   width: 100%;
@@ -645,7 +657,7 @@ body.site-body {
 }
 
 .tab-panel--overview .map-section.map-section--overview-centered {
-  flex: 1 1 auto;
+  flex: 0 0 auto;
   min-height: 0;
   display: flex;
   flex-direction: column;
@@ -660,7 +672,7 @@ body.site-body {
   border: none;
   border-radius: 0;
   box-shadow: none;
-  flex: 1 1 auto;
+  flex: 0 0 auto;
   min-height: 0;
   display: flex;
   flex-direction: column;
@@ -687,16 +699,24 @@ body.site-body {
   box-shadow: 0 20px 50px rgba(0, 0, 0, 0.35);
 }
 
-/* Overview: full-width credibility strip (flush below map) */
+.overview-data-source-line {
+  margin: 0;
+  flex-shrink: 0;
+  font-size: 10px;
+  color: rgba(232, 248, 246, 0.3);
+  text-align: center;
+  padding: 8px;
+  line-height: 1.4;
+}
+
+/* Overview: full-width credibility strip (always below map in document order) */
 .overview-credibility-strip {
-  flex: 0 0 80px;
+  flex: 0 0 auto;
   width: 100%;
-  height: 80px;
   min-height: 80px;
-  max-height: 80px;
   margin: 0;
   margin-top: 0;
-  padding: 0.35rem 0.85rem;
+  padding: 0.5rem 0.85rem;
   box-sizing: border-box;
   display: flex;
   flex-direction: column;
@@ -705,8 +725,8 @@ body.site-body {
   gap: 0.25rem;
   background: #071220;
   border: none;
-  border-top: none;
-  overflow: hidden;
+  border-top: 1px solid rgba(41, 212, 197, 0.12);
+  overflow: visible;
 }
 
 .overview-credibility-strip__sources {
@@ -799,6 +819,16 @@ body.site-body {
   border: 1px solid rgba(62, 207, 255, 0.18);
   border-radius: 12px;
   padding: 28px;
+  box-sizing: border-box;
+  height: 100%;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.region-card .metric-rows {
+  flex: 1 1 auto;
+  min-height: 0;
 }
 
 .region-card__title {
@@ -844,6 +874,64 @@ body.site-body {
   font-size: 0.92rem;
 }
 
+.metric-row__label--with-live {
+  display: inline-flex;
+  flex-wrap: nowrap;
+  align-items: center;
+  gap: 0.35rem;
+  white-space: nowrap;
+  flex-shrink: 0;
+  max-width: 48%;
+}
+
+@media (max-width: 1050px) {
+  .metric-row__label--with-live {
+    max-width: 42%;
+  }
+}
+
+@keyframes live-indicator-pulse {
+  0%,
+  100% {
+    opacity: 1;
+    box-shadow: 0 0 0 0 rgba(61, 220, 132, 0.5);
+  }
+  50% {
+    opacity: 0.88;
+    box-shadow: 0 0 0 5px rgba(61, 220, 132, 0);
+  }
+}
+
+/* Matches nav-style live treatment: pulsing dot + teal LIVE label */
+.metric-live-badge,
+.nav-live-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  margin-left: 0.1rem;
+  vertical-align: middle;
+  flex-shrink: 0;
+}
+
+.metric-live-badge__dot,
+.nav-live-badge__dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  background: #3ddc84;
+  animation: live-indicator-pulse 2s ease-in-out infinite;
+}
+
+.metric-live-badge__text,
+.nav-live-badge__text {
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.25px;
+  text-transform: uppercase;
+  color: var(--color-reef-teal);
+}
+
 .metric-row__value {
   font-weight: 600;
   font-variant-numeric: tabular-nums;
@@ -854,6 +942,8 @@ body.site-body {
   flex-direction: column;
   align-items: flex-end;
   gap: 0.2rem;
+  flex: 1 1 auto;
+  min-width: 0;
 }
 
 .metric-row__context {
@@ -883,6 +973,16 @@ body.site-body {
 @media (max-width: 900px) {
   .region-cards {
     grid-template-columns: 1fr;
+  }
+
+  .metric-row__label--with-live {
+    max-width: none;
+    flex-shrink: 1;
+    min-width: 0;
+  }
+
+  .metric-row--seagrass-line .metric-row__label {
+    flex: 0 1 auto;
   }
 }
 
@@ -931,12 +1031,78 @@ body.site-body {
   color: rgba(232,248,246,0.35);
 }
 
+.metric-row--seagrass-line {
+  align-items: flex-start;
+  gap: 0.75rem 1rem;
+}
+
+.metric-row--seagrass-line .metric-row__label {
+  flex: 0 1 36%;
+  min-width: 6.75rem;
+}
+
+.seagrass-metric-stack {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  text-align: right;
+  flex: 1 1 auto;
+  min-width: 0;
+  gap: 0;
+}
+
+.seagrass-metric-source {
+  display: block;
+  margin-top: 2px;
+  font-size: 10px;
+  color: rgba(232, 248, 246, 0.3);
+  line-height: 1.3;
+  white-space: normal;
+  max-width: 100%;
+}
+
+.metric-row--seagrass-line .seagrass-change {
+  font-weight: 600;
+  font-size: 12px;
+  text-align: right;
+  white-space: nowrap;
+  line-height: 1.35;
+  flex-shrink: 0;
+}
+
+.seagrass-change--red {
+  color: #ff6b6b;
+}
+
+.seagrass-change--orange {
+  color: #f4845f;
+}
+
+.seagrass-change--yellow {
+  color: #ffd166;
+}
+
+.seagrass-change--neutral {
+  color: rgba(232, 248, 246, 0.6);
+}
+
+.reef-health-disclaimer {
+  margin: 1.25rem 0 0;
+  font-size: 0.72rem;
+  line-height: 1.5;
+  color: rgba(159, 179, 208, 0.65);
+  max-width: 52rem;
+}
+
 .footer-strip {
   margin-top: 0;
 }
 
 .tab-panel--overview .footer-strip {
+  flex-shrink: 0;
   margin-top: auto;
+  position: relative;
+  z-index: 3;
 }
 
 .reef-charts {
@@ -978,6 +1144,14 @@ body.site-body {
   margin: 0.2rem 0 0;
   color: var(--color-text-muted);
   font-size: 0.86rem;
+}
+
+.reef-chart-card__dhw-note {
+  margin: 0.35rem 0 0;
+  font-size: 10px;
+  color: rgba(232, 248, 246, 0.4);
+  font-style: italic;
+  line-height: 1.35;
 }
 
 .chart-toggle-group {
@@ -1382,6 +1556,14 @@ body.site-body {
   max-width: 900px;
   margin: 20px auto 0;
   padding: 0 20px;
+}
+
+.news-feed-preface {
+  margin: 0 0 12px;
+  font-size: 11px;
+  color: rgba(232, 248, 246, 0.4);
+  font-style: italic;
+  line-height: 1.45;
 }
 
 .news-loading {

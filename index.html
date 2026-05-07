@@ -8,7 +8,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400;1,600&family=Source+Sans+3:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js" crossorigin="anonymous"></script>
   <link rel="stylesheet" href="css/style.css">
 </head>
 <body class="site-body">
@@ -57,6 +57,9 @@
         </div>
         <div class="overview-side overview-side--right" aria-hidden="true"></div>
       </div>
+      <p class="overview-data-source-line">
+        Live data: NOAA Coral Reef Watch · Map: Florida Department of Environmental Protection
+      </p>
       <footer class="overview-credibility-strip footer-strip" aria-label="Data sources and attribution">
         <ul class="overview-credibility-strip__sources">
           <li>NOAA Coral Reef Watch</li>
@@ -90,31 +93,29 @@
                 </span>
               </li>
               <li class="metric-row">
-                <span class="metric-row__label">Sea Surface Temperature</span>
+                <span class="metric-row__label metric-row__label--with-live">
+                  Sea Surface Temperature
+                  <span class="metric-live-badge" aria-label="Live data">
+                    <span class="metric-live-badge__dot" aria-hidden="true"></span>
+                    <span class="metric-live-badge__text">LIVE</span>
+                  </span>
+                </span>
                 <span class="metric-row__value-wrap">
                   <span class="metric-row__value"><span class="metric-dot" id="fk-sst-dot"></span><span id="keys-sst">Loading...</span></span>
                   <span class="metric-row__context">Sea surface temperature at reef sites</span>
                 </span>
               </li>
               <li class="metric-row">
-                <span class="metric-row__label">Degree Heating Weeks</span>
+                <span class="metric-row__label metric-row__label--with-live">
+                  Degree Heating Weeks
+                  <span class="metric-live-badge" aria-label="Live data">
+                    <span class="metric-live-badge__dot" aria-hidden="true"></span>
+                    <span class="metric-live-badge__text">LIVE</span>
+                  </span>
+                </span>
                 <span class="metric-row__value-wrap">
                   <span class="metric-row__value"><span class="metric-dot" id="fk-dhw-dot"></span><span id="keys-dhw">Loading...</span></span>
                   <span class="metric-row__context">Accumulated heat stress over 12 weeks</span>
-                </span>
-              </li>
-              <li class="metric-row">
-                <span class="metric-row__label">Live Coral Cover</span>
-                <span class="metric-row__value-wrap">
-                  <span class="metric-row__value"><span class="metric-dot metric-dot--coral"></span><span id="keys-coral-cover">Loading...</span></span>
-                  <span class="metric-row__context">Down from 25-40% historically</span>
-                </span>
-              </li>
-              <li class="metric-row">
-                <span class="metric-row__label">Ocean pH</span>
-                <span class="metric-row__value-wrap">
-                  <span class="metric-row__value"><span class="metric-dot metric-dot--ph"></span><span id="keys-ph">Loading...</span></span>
-                  <span class="metric-row__context">Pre-industrial baseline was 8.18</span>
                 </span>
               </li>
             </ul>
@@ -132,31 +133,29 @@
                 </span>
               </li>
               <li class="metric-row">
-                <span class="metric-row__label">Sea Surface Temperature</span>
+                <span class="metric-row__label metric-row__label--with-live">
+                  Sea Surface Temperature
+                  <span class="metric-live-badge" aria-label="Live data">
+                    <span class="metric-live-badge__dot" aria-hidden="true"></span>
+                    <span class="metric-live-badge__text">LIVE</span>
+                  </span>
+                </span>
                 <span class="metric-row__value-wrap">
                   <span class="metric-row__value"><span class="metric-dot" id="se-sst-dot"></span><span id="sefl-sst">Loading...</span></span>
                   <span class="metric-row__context">Sea surface temperature at reef sites</span>
                 </span>
               </li>
               <li class="metric-row">
-                <span class="metric-row__label">Degree Heating Weeks</span>
+                <span class="metric-row__label metric-row__label--with-live">
+                  Degree Heating Weeks
+                  <span class="metric-live-badge" aria-label="Live data">
+                    <span class="metric-live-badge__dot" aria-hidden="true"></span>
+                    <span class="metric-live-badge__text">LIVE</span>
+                  </span>
+                </span>
                 <span class="metric-row__value-wrap">
                   <span class="metric-row__value"><span class="metric-dot" id="se-dhw-dot"></span><span id="sefl-dhw">Loading...</span></span>
                   <span class="metric-row__context">Accumulated heat stress over 12 weeks</span>
-                </span>
-              </li>
-              <li class="metric-row">
-                <span class="metric-row__label">Live Coral Cover</span>
-                <span class="metric-row__value-wrap">
-                  <span class="metric-row__value"><span class="metric-dot metric-dot--coral"></span><span id="sefl-coral-cover">Loading...</span></span>
-                  <span class="metric-row__context">Down from 25-40% historically</span>
-                </span>
-              </li>
-              <li class="metric-row">
-                <span class="metric-row__label">Ocean pH</span>
-                <span class="metric-row__value-wrap">
-                  <span class="metric-row__value"><span class="metric-dot metric-dot--ph"></span><span id="sefl-ph">Loading...</span></span>
-                  <span class="metric-row__context">Pre-industrial baseline was 8.18</span>
                 </span>
               </li>
             </ul>
@@ -165,46 +164,50 @@
           <article class="region-card" id="region-card-seagrass" aria-labelledby="region-seagrass-title">
             <h3 class="region-card__title" id="region-seagrass-title">Seagrass Health</h3>
             <p class="region-card__subtitle">Florida Bay &amp; Nearshore Waters</p>
-            <ul class="metric-rows">
-              <li class="metric-row">
+            <ul class="metric-rows metric-rows--seagrass">
+              <li class="metric-row metric-row--seagrass-line">
                 <span class="metric-row__label">Florida Bay Coverage</span>
-                <span class="metric-row__value-wrap">
-                  <span class="metric-row__value"><span class="metric-dot metric-dot--red"></span>Severely reduced</span>
-                  <span class="metric-row__context">Major die-off events since 2015</span>
+                <span class="seagrass-metric-stack">
+                  <span class="seagrass-change seagrass-change--red">▼ 60% decline since 2015</span>
+                  <span class="seagrass-metric-source">Source: FWC/FWRI 2024</span>
                 </span>
               </li>
-              <li class="metric-row">
+              <li class="metric-row metric-row--seagrass-line">
                 <span class="metric-row__label">Biscayne Bay</span>
-                <span class="metric-row__value-wrap">
-                  <span class="metric-row__value"><span class="metric-dot metric-dot--orange"></span>Moderately stressed</span>
-                  <span class="metric-row__context">Urban runoff and warming impacts</span>
+                <span class="seagrass-metric-stack">
+                  <span class="seagrass-change seagrass-change--orange">▼ 35% reduction since 2000</span>
+                  <span class="seagrass-metric-source">Source: SFWMD 2024</span>
                 </span>
               </li>
-              <li class="metric-row">
+              <li class="metric-row metric-row--seagrass-line">
                 <span class="metric-row__label">Keys Nearshore</span>
-                <span class="metric-row__value-wrap">
-                  <span class="metric-row__value"><span class="metric-dot metric-dot--yellow"></span>Variable — some recovery</span>
-                  <span class="metric-row__context">Patchy recovery at select sites</span>
+                <span class="seagrass-metric-stack">
+                  <span class="seagrass-change seagrass-change--yellow">▲ 8% recovery at select sites</span>
+                  <span class="seagrass-metric-source">Source: FDEP CREMP 2024</span>
                 </span>
               </li>
-              <li class="metric-row">
+              <li class="metric-row metric-row--seagrass-line">
                 <span class="metric-row__label">Primary Stressors</span>
-                <span class="metric-row__value-wrap">
-                  <span class="metric-row__value"><span class="metric-dot metric-dot--orange"></span>Heat, salinity, turbidity</span>
-                  <span class="metric-row__context">Compounded by reef degradation</span>
+                <span class="seagrass-metric-stack">
+                  <span class="seagrass-change seagrass-change--orange">▲ 3 compounding stressors</span>
+                  <span class="seagrass-metric-source">Source: FDEP 2024</span>
                 </span>
               </li>
-              <li class="metric-row">
+              <li class="metric-row metric-row--seagrass-line">
                 <span class="metric-row__label">Survey Frequency</span>
-                <span class="metric-row__value-wrap">
-                  <span class="metric-row__value"><span class="metric-dot metric-dot--teal"></span>Annual — FDEP &amp; SFWMD</span>
-                  <span class="metric-row__context">Last major survey: 2024</span>
+                <span class="seagrass-metric-stack">
+                  <span class="seagrass-change seagrass-change--neutral">Annual — last survey 2024</span>
                 </span>
               </li>
             </ul>
             <p class="seagrass-card__foot">Annual survey data · FDEP, SFWMD &amp; FWC</p>
           </article>
         </div>
+
+        <p class="reef-health-disclaimer" role="note">
+          🔴 Live data: Bleaching alerts, SST, DHW — updated daily from NOAA Coral Reef Watch ·
+          📋 Survey data: Seagrass metrics — annual FDEP/SFWMD surveys
+        </p>
 
         <section class="reef-charts" aria-label="Reef health charts">
           <div class="reef-charts__row">
@@ -228,6 +231,7 @@
               <div class="reef-chart-card__head">
                 <div>
                   <h3 class="reef-chart-card__title">Bleaching Season Severity</h3>
+                  <p class="reef-chart-card__dhw-note">2025 bar reflects current live DHW reading</p>
                   <p class="reef-chart-card__subtitle">Florida Keys — Degree Heating Weeks</p>
                 </div>
                 <div class="chart-toggle-group" id="bleaching-toggle-group">
@@ -386,6 +390,7 @@
         </div>
 
         <div class="news-feed-wrap">
+          <p class="news-feed-preface">Showing live articles from NOAA and conservation partners where available</p>
           <p class="news-loading" id="news-loading" aria-live="polite">Loading news…</p>
           <div class="news-feed" id="news-feed" aria-busy="true" aria-label="Conservation news articles"></div>
         </div>

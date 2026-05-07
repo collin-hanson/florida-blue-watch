@@ -1,6 +1,10 @@
 const API_BASE_URL = "https://api.coral.tsr.lol/stations/";
 const CORS_PROXY_URL = "https://corsproxy.io/?";
 
+function coralApiProxied(absoluteUrl) {
+  return `${CORS_PROXY_URL}${encodeURIComponent(absoluteUrl)}`;
+}
+
 const STATIONS = {
   floridaKeys: {
     id: "florida_keys",
@@ -11,12 +15,6 @@ const STATIONS = {
       sstDot: "#fk-sst-dot",
       dhw: "#keys-dhw",
       dhwDot: "#fk-dhw-dot",
-      coralCover: "#keys-coral-cover",
-      ph: "#keys-ph",
-    },
-    staticValues: {
-      coralCover: "~2% (CREMP 2024)",
-      ph: "~8.04 (acidifying)",
     },
   },
   southeastFlorida: {
@@ -28,12 +26,6 @@ const STATIONS = {
       sstDot: "#se-sst-dot",
       dhw: "#sefl-dhw",
       dhwDot: "#se-dhw-dot",
-      coralCover: "#sefl-coral-cover",
-      ph: "#sefl-ph",
-    },
-    staticValues: {
-      coralCover: "<1% (CREMP 2024)",
-      ph: "~8.06 (acidifying)",
     },
   },
 };
@@ -136,7 +128,7 @@ function getDhwDotColor(dhw) {
 
 async function fetchStationData(stationId) {
   const stationUrl = `${API_BASE_URL}${stationId}/current`;
-  const proxiedUrl = `${CORS_PROXY_URL}${stationUrl}`;
+  const proxiedUrl = coralApiProxied(stationUrl);
   const response = await fetch(proxiedUrl);
   if (!response.ok) {
     throw new Error(`HTTP ${response.status} while loading station ${stationId}`);
@@ -157,29 +149,23 @@ async function fetchStationData(stationId) {
   };
 }
 
-function renderStaticFields(selectors, staticValues) {
-  setFieldText(selectors.coralCover, staticValues.coralCover);
-  setFieldText(selectors.ph, staticValues.ph);
-}
-
-function renderUnavailable(selectors, staticValues) {
+function renderUnavailable(selectors) {
   setAlertField(selectors.alert, "Data unavailable", "");
   setFieldText(selectors.sst, "Data unavailable");
   setFieldText(selectors.dhw, "Data unavailable");
   setDotColor(selectors.alertDot, "#9fb3d0");
   setDotColor(selectors.sstDot, "#9fb3d0");
   setDotColor(selectors.dhwDot, "#9fb3d0");
-  renderStaticFields(selectors, staticValues);
 }
 
-function renderStation(selectors, staticValues, stationData) {
+function renderStation(selectors, stationData) {
   if (
     !stationData ||
     stationData.sst === null ||
     stationData.dhw === null ||
     stationData.stressLevel === null
   ) {
-    renderUnavailable(selectors, staticValues);
+    renderUnavailable(selectors);
     return;
   }
 
@@ -192,25 +178,74 @@ function renderStation(selectors, staticValues, stationData) {
   setDotColor(selectors.alertDot, getAlertDotColor(alert.text));
   setDotColor(selectors.sstDot, getSstDotColor(stationData.sst));
   setDotColor(selectors.dhwDot, getDhwDotColor(stationData.dhw));
-  renderStaticFields(selectors, staticValues);
 }
 
 function setLoadingState() {
-  const allSelectors = [
-    STATIONS.floridaKeys.selectors,
-    STATIONS.southeastFlorida.selectors,
-  ];
+  const allSelectors = [STATIONS.floridaKeys.selectors, STATIONS.southeastFlorida.selectors];
 
   allSelectors.forEach((selectors) => {
     setAlertField(selectors.alert, "Loading...", "");
     setFieldText(selectors.sst, "Loading...");
     setFieldText(selectors.dhw, "Loading...");
-    setFieldText(selectors.coralCover, "Loading...");
-    setFieldText(selectors.ph, "Loading...");
     setDotColor(selectors.alertDot, "#9fb3d0");
     setDotColor(selectors.sstDot, "#9fb3d0");
     setDotColor(selectors.dhwDot, "#9fb3d0");
   });
+}
+
+function floridaKeysDhwFromFetch(fkData) {
+  if (!fkData || fkData.dhw === null || !Number.isFinite(fkData.dhw)) {
+    return null;
+  }
+  return fkData.dhw;
+}
+
+/**
+ * Last N daily rows: labels "Mon YY", values sst_max (°C).
+ * API uses GET /stations/{slug}?limit=n (not /observations — that path 404s).
+ */
+export async function fetchFloridaKeysSstObservationsLast12() {
+  const historyUrl = "https://api.coral.tsr.lol/stations/florida_keys?limit=12";
+  const proxiedUrl = coralApiProxied(historyUrl);
+  const response = await fetch(proxiedUrl);
+  if (!response.ok) {
+    throw new Error(`HTTP ${response.status} loading SST observations`);
+  }
+
+  const payload = await response.json();
+  const list = Array.isArray(payload) ? payload : payload?.data ?? payload?.observations ?? [];
+  if (!Array.isArray(list) || list.length === 0) {
+    throw new Error("No observations in response");
+  }
+
+  const sorted = [...list].sort((a, b) => {
+    const ta = new Date(a.date ?? a.observed_at ?? a.time ?? 0).getTime();
+    const tb = new Date(b.date ?? b.observed_at ?? b.time ?? 0).getTime();
+    return ta - tb;
+  });
+  const last12 = sorted.slice(-12);
+  const labels = [];
+  const data = [];
+
+  for (const row of last12) {
+    const dateRaw = row.date ?? row.observed_at ?? row.time ?? row.timestamp;
+    const sst = toNumber(row.sst_max ?? row.sst ?? row.sstMax);
+    if (!dateRaw || sst === null) continue;
+
+    const d = new Date(dateRaw);
+    if (Number.isNaN(d.getTime())) continue;
+
+    const mon = d.toLocaleDateString("en-US", { month: "short" });
+    const yy = String(d.getFullYear()).slice(-2);
+    labels.push(`${mon} ${yy}`);
+    data.push(sst);
+  }
+
+  if (labels.length === 0) {
+    throw new Error("Could not parse observations");
+  }
+
+  return { labels, data };
 }
 
 export async function fetchReefData() {
@@ -225,21 +260,19 @@ export async function fetchReefData() {
     }),
   ]);
 
-  renderStation(STATIONS.floridaKeys.selectors, STATIONS.floridaKeys.staticValues, fkData);
-  renderStation(
-    STATIONS.southeastFlorida.selectors,
-    STATIONS.southeastFlorida.staticValues,
-    seData
-  );
+  renderStation(STATIONS.floridaKeys.selectors, fkData);
+  renderStation(STATIONS.southeastFlorida.selectors, seData);
 
   const lastUpdated = getElement("#last-updated");
   if (lastUpdated) {
     const rawDate = fkData?.date || seData?.date || "";
     lastUpdated.textContent = `Last updated: ${formatDate(rawDate)}`;
   }
+
+  return { floridaKeysDhw: floridaKeysDhwFromFetch(fkData) };
 }
 
 export async function initReefData() {
   setLoadingState();
-  await fetchReefData();
+  return await fetchReefData();
 }
