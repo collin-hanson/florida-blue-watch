@@ -821,14 +821,18 @@ body.site-body {
   padding: 28px;
   box-sizing: border-box;
   height: 100%;
+  min-width: 0;
   min-height: 0;
   display: flex;
   flex-direction: column;
+  overflow-x: clip;
 }
 
 .region-card .metric-rows {
   flex: 1 1 auto;
+  min-width: 0;
   min-height: 0;
+  width: 100%;
 }
 
 .region-card__title {
@@ -853,14 +857,22 @@ body.site-body {
   display: flex;
   flex-direction: column;
   gap: 0.65rem;
+  min-width: 0;
+  width: 100%;
 }
 
+/*
+ * Two-column grid inside each card. Track mins must not exceed narrow card width (~15rem content),
+ * or the row spills past the card. Use fr tracks + minmax(0, …) so the row always fits.
+ */
 .metric-row {
-  display: flex;
-  flex-wrap: nowrap;
-  justify-content: space-between;
-  align-items: flex-start;
-  gap: 0.35rem 1rem;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  column-gap: 0.75rem;
+  align-items: start;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
   padding: 0.5rem 0;
   border-bottom: 1px solid rgba(255, 255, 255, 0.06);
 }
@@ -874,20 +886,21 @@ body.site-body {
   font-size: 0.92rem;
 }
 
+/* Left grid cell: title line, then LIVE under it */
 .metric-row__label--with-live {
-  display: inline-flex;
-  flex-wrap: nowrap;
-  align-items: center;
-  gap: 0.35rem;
-  white-space: nowrap;
-  flex-shrink: 0;
-  max-width: 48%;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0;
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+  grid-column: 1;
 }
 
-@media (max-width: 1050px) {
-  .metric-row__label--with-live {
-    max-width: 42%;
-  }
+.metric-row__label--with-live .metric-row__label-text {
+  display: block;
+  line-height: 1.35;
 }
 
 @keyframes live-indicator-pulse {
@@ -902,14 +915,14 @@ body.site-body {
   }
 }
 
-/* Matches nav-style live treatment: pulsing dot + teal LIVE label */
+/* LIVE: below metric label on the left; pulsing dot + teal caption */
 .metric-live-badge,
 .nav-live-badge {
   display: inline-flex;
   align-items: center;
-  gap: 5px;
-  margin-left: 0.1rem;
-  vertical-align: middle;
+  gap: 4px;
+  margin-top: 3px;
+  margin-left: 0;
   flex-shrink: 0;
 }
 
@@ -927,9 +940,9 @@ body.site-body {
 .nav-live-badge__text {
   font-size: 9px;
   font-weight: 700;
-  letter-spacing: 0.25px;
+  letter-spacing: 0.5px;
   text-transform: uppercase;
-  color: var(--color-reef-teal);
+  color: #29d4c5;
 }
 
 .metric-row__value {
@@ -942,14 +955,19 @@ body.site-body {
   flex-direction: column;
   align-items: flex-end;
   gap: 0.2rem;
-  flex: 1 1 auto;
   min-width: 0;
+  width: 100%;
+  max-width: 100%;
+  grid-column: 2;
+  align-self: start;
 }
 
 .metric-row__context {
   font-size: 11px;
   opacity: 0.55;
   color: var(--color-text-muted);
+  max-width: 100%;
+  text-align: right;
 }
 
 .metric-dot {
@@ -975,14 +993,8 @@ body.site-body {
     grid-template-columns: 1fr;
   }
 
-  .metric-row__label--with-live {
-    max-width: none;
-    flex-shrink: 1;
-    min-width: 0;
-  }
-
-  .metric-row--seagrass-line .metric-row__label {
-    flex: 0 1 auto;
+  .metric-row {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
   }
 }
 
@@ -1032,13 +1044,11 @@ body.site-body {
 }
 
 .metric-row--seagrass-line {
-  align-items: flex-start;
-  gap: 0.75rem 1rem;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr);
 }
 
 .metric-row--seagrass-line .metric-row__label {
-  flex: 0 1 36%;
-  min-width: 6.75rem;
+  grid-column: 1;
 }
 
 .seagrass-metric-stack {
@@ -1046,9 +1056,12 @@ body.site-body {
   flex-direction: column;
   align-items: flex-end;
   text-align: right;
-  flex: 1 1 auto;
   min-width: 0;
   gap: 0;
+  grid-column: 2;
+  align-self: start;
+  width: 100%;
+  max-width: 100%;
 }
 
 .seagrass-metric-source {
